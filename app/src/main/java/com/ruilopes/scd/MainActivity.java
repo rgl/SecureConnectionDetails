@@ -202,6 +202,14 @@ public class MainActivity extends Activity {
             }
         }
         catch (Exception e) {
+            // Some ISP and DNS providers intercept failed (or the first) DNS queries and show some
+            // kind of search results page. This might be the cause of spurious errors like:
+            //
+            //  javax.net.ssl.SSLHandshakeException: javax.net.ssl.SSLProtocolException: SSL
+            //  handshake aborted: ssl=0x56b376a0: Failure in SSL library, usually a protocol error
+            //  error:140770FC:SSL routines:SSL23_GET_SERVER_HELLO:unknown protocol
+            //  (external/openssl/ssl/s23_clnt.c:766 0x52d32dc5:0x00000000)
+
             formatter.format(
                 "%s exception class=%s message=%s\n",
                 getFormattedDate(),
