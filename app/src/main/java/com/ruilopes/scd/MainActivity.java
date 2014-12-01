@@ -24,6 +24,8 @@ import java.net.URL;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Formatter;
 import java.util.Locale;
@@ -35,6 +37,12 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 public class MainActivity extends Activity {
+    private final static DateFormat logDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
+    private static String getFormattedDate() {
+        return logDateFormat.format(new Date());
+    }
+
     private Button checkButton;
     private AsyncTask checkTask;
 
@@ -70,7 +78,7 @@ public class MainActivity extends Activity {
 
                                 @Override
                                 public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                                    formatter.format("%s checkServerTrusted authType=%s\n", new Date(), authType);
+                                    formatter.format("%s checkServerTrusted authType=%s\n", getFormattedDate(), authType);
                                     dumpCertificates(formatter, chain);
                                 }
 
@@ -83,16 +91,16 @@ public class MainActivity extends Activity {
                         null
                     );
 
-                    formatter.format("%s # checking without trust manager\n", new Date());
+                    formatter.format("%s # checking without trust manager\n", getFormattedDate());
                     check(formatter, context.getSocketFactory());
 
-                    formatter.format("%s # checking with default trust manager\n", new Date());
+                    formatter.format("%s # checking with default trust manager\n", getFormattedDate());
                     check(formatter, null);
                 }
                 catch (Exception e) {
                     formatter.format(
                         "%s exception class=%s message=%s\n",
-                        new Date(),
+                        getFormattedDate(),
                         e.getClass(),
                         e
                     );
@@ -133,7 +141,7 @@ public class MainActivity extends Activity {
     private void check(final Formatter formatter, SSLSocketFactory socketFactory) {
         for (int retryNumber = 0; retryNumber < 3; ++retryNumber) {
             if (retryNumber > 0) {
-                formatter.format("%s ## retry #%d...\n", new Date(), retryNumber);
+                formatter.format("%s ## retry #%d...\n", getFormattedDate(), retryNumber);
             }
 
             if (checkInternal(formatter, socketFactory)) {
@@ -145,7 +153,7 @@ public class MainActivity extends Activity {
             } catch (InterruptedException e) {
                 formatter.format(
                     "%s exception class=%s message=%s\n",
-                    new Date(),
+                    getFormattedDate(),
                     e.getClass(),
                     e
                 );
@@ -158,32 +166,32 @@ public class MainActivity extends Activity {
         try {
             URL url = new URL("https://www.euroticket-alacard.pt/alc/pages/login.jsf");
 
-            formatter.format("%s connecting to %s...\n", new Date(), url);
+            formatter.format("%s connecting to %s...\n", getFormattedDate(), url);
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            formatter.format("%s connected\n", new Date());
+            formatter.format("%s connected\n", getFormattedDate());
 
             try {
                 if (socketFactory != null) {
                     connection.setSSLSocketFactory(socketFactory);
                 }
 
-                formatter.format("%s getting input stream...\n", new Date());
+                formatter.format("%s getting input stream...\n", getFormattedDate());
                 InputStream in = new BufferedInputStream(connection.getInputStream());
-                formatter.format("%s got input stream\n", new Date());
+                formatter.format("%s got input stream\n", getFormattedDate());
 
                 try {
                     // Handle Network Sign-On: Some Wi-Fi networks block Internet access until the
                     // user clicks through a sign-on page. Such sign-on pages are typically
                     // presented by using HTTP redirects.
                     if (!url.getHost().equals(connection.getURL().getHost())) {
-                        formatter.format("%s got redirected to %s...\n", new Date(), connection.getURL());
+                        formatter.format("%s got redirected to %s...\n", getFormattedDate(), connection.getURL());
                     }
                 }
                 finally {
                     in.close();
                 }
 
-                formatter.format("%s Cipher Suite %s\n", new Date(), connection.getCipherSuite());
+                formatter.format("%s Cipher Suite %s\n", getFormattedDate(), connection.getCipherSuite());
 
                 dumpCertificates(formatter, connection.getServerCertificates());
 
@@ -196,7 +204,7 @@ public class MainActivity extends Activity {
         catch (Exception e) {
             formatter.format(
                 "%s exception class=%s message=%s\n",
-                new Date(),
+                getFormattedDate(),
                 e.getClass(),
                 e
             );
@@ -207,20 +215,20 @@ public class MainActivity extends Activity {
 
     private void dumpCertificates(Formatter formatter, Certificate[] certificates) {
         if (certificates == null || certificates.length == 0) {
-            formatter.format("%s peer didn't sent any certificate!?\n", new Date());
+            formatter.format("%s peer didn't sent any certificate!?\n", getFormattedDate());
         }
         else {
             for (int i = 0; i < certificates.length; ++i) {
                 Certificate certificate = certificates[i];
 
-                formatter.format("%s certificate #%d type=%s class=%s\n", new Date(), i, certificate.getType(), certificate.getClass());
+                formatter.format("%s certificate #%d type=%s class=%s\n", getFormattedDate(), i, certificate.getType(), certificate.getClass());
 
                 if (certificate instanceof X509Certificate) {
                     X509Certificate x509 = (X509Certificate) certificate;
 
                     formatter.format(
                         "%s certificate #%d subject=%s issuer=%s publicKey=%s\n",
-                        new Date(),
+                        getFormattedDate(),
                         i,
                         x509.getSubjectX500Principal(),
                         x509.getIssuerX500Principal(),
