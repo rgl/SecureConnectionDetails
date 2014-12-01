@@ -77,10 +77,10 @@ public class MainActivity extends Activity {
                         null
                     );
 
-                    formatter.format("%s checking without trust manager\n", new Date());
+                    formatter.format("%s # checking without trust manager\n", new Date());
                     check(formatter, context.getSocketFactory());
 
-                    formatter.format("%s checking with default trust manager\n", new Date());
+                    formatter.format("%s # checking with default trust manager\n", new Date());
                     check(formatter, null);
                 }
                 catch (Exception e) {
@@ -124,6 +124,30 @@ public class MainActivity extends Activity {
     }
 
     private void check(final Formatter formatter, SSLSocketFactory socketFactory) {
+        for (int retryNumber = 0; retryNumber < 3; ++retryNumber) {
+            if (retryNumber > 0) {
+                formatter.format("%s ## retry #%d...\n", new Date(), retryNumber);
+            }
+
+            if (checkInternal(formatter, socketFactory)) {
+                return;
+            }
+
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                formatter.format(
+                    "%s exception class=%s message=%s\n",
+                    new Date(),
+                    e.getClass(),
+                    e
+                );
+                return;
+            }
+        }
+    }
+
+    private boolean checkInternal(final Formatter formatter, SSLSocketFactory socketFactory) {
         try {
             URL url = new URL("https://www.euroticket-alacard.pt/alc/pages/login.jsf");
 
@@ -155,6 +179,8 @@ public class MainActivity extends Activity {
                 formatter.format("%s Cipher Suite %s\n", new Date(), connection.getCipherSuite());
 
                 dumpCertificates(formatter, connection.getServerCertificates());
+
+                return true;
             }
             finally {
                 connection.disconnect();
@@ -167,6 +193,8 @@ public class MainActivity extends Activity {
                 e.getClass(),
                 e
             );
+
+            return false;
         }
     }
 
