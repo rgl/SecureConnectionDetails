@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
@@ -34,17 +35,22 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 public class MainActivity extends Activity {
-    AsyncTask checkTask;
+    private Button checkButton;
+    private AsyncTask checkTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        checkButton = (Button)findViewById(R.id.checkButton);
     }
 
     public void onCheckButtonClick(View view) {
         if (checkTask != null)
             return;
+
+        checkButton.setText(R.string.checking);
+        checkButton.setEnabled(false);
 
         checkTask = new AsyncTask<Object, Void, String>() {
             @Override
@@ -91,15 +97,16 @@ public class MainActivity extends Activity {
                         e
                     );
                 }
-                finally {
-                    checkTask = null;
-                }
 
                 return sb.toString();
             }
 
             @Override
             protected void onPostExecute(String result) {
+                checkButton.setText(R.string.check);
+                checkButton.setEnabled(true);
+                checkTask = null;
+
                 String[] TO = {"rgl+cartaoalacard+android@ruilopes.com"};
                 String subject = "Check Secure Connection Details Result";
                 String body = result + "\n\n----\n" + getSystemInformation();
