@@ -91,11 +91,19 @@ public class MainActivity extends Activity {
                         null
                     );
 
-                    formatter.format("%s # checking without trust manager\n", getFormattedDate());
-                    check(formatter, context.getSocketFactory());
+                    String[] urls = new String[] {
+                        "https://www.google.pt/",
+                        "https://www.euroticket-alacard.pt/",
+                        "https://www.euroticket-alacard.pt/alc/pages/login.jsf",
+                    };
 
-                    formatter.format("%s # checking with default trust manager\n", getFormattedDate());
-                    check(formatter, null);
+                    for (String url : urls) {
+                        formatter.format("%s # checking without trust manager\n", getFormattedDate());
+                        check(formatter, context.getSocketFactory(), url);
+
+                        formatter.format("%s # checking with default trust manager\n", getFormattedDate());
+                        check(formatter, null, url);
+                    }
                 }
                 catch (Exception e) {
                     formatter.format(
@@ -138,13 +146,13 @@ public class MainActivity extends Activity {
         checkTask.execute();
     }
 
-    private void check(final Formatter formatter, SSLSocketFactory socketFactory) {
+    private void check(final Formatter formatter, SSLSocketFactory socketFactory, String url) {
         for (int retryNumber = 0; retryNumber < 3; ++retryNumber) {
             if (retryNumber > 0) {
                 formatter.format("%s ## retry #%d...\n", getFormattedDate(), retryNumber);
             }
 
-            if (checkInternal(formatter, socketFactory)) {
+            if (checkInternal(formatter, socketFactory, url)) {
                 return;
             }
 
@@ -162,9 +170,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    private boolean checkInternal(final Formatter formatter, SSLSocketFactory socketFactory) {
+    private boolean checkInternal(final Formatter formatter, SSLSocketFactory socketFactory, String checkUrl) {
         try {
-            URL url = new URL("https://www.euroticket-alacard.pt/alc/pages/login.jsf");
+            URL url = new URL(checkUrl);
 
             formatter.format("%s connecting to %s...\n", getFormattedDate(), url);
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
@@ -175,9 +183,13 @@ public class MainActivity extends Activity {
                     connection.setSSLSocketFactory(socketFactory);
                 }
 
+                connection.setInstanceFollowRedirects(false);
+
                 formatter.format("%s getting input stream...\n", getFormattedDate());
                 InputStream in = new BufferedInputStream(connection.getInputStream());
                 formatter.format("%s got input stream\n", getFormattedDate());
+
+                formatter.format("%s response %d %s\n", getFormattedDate(), connection.getResponseCode(), connection.getResponseMessage());
 
                 try {
                     // Handle Network Sign-On: Some Wi-Fi networks block Internet access until the
